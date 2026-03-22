@@ -40,6 +40,8 @@ button{font-size:16px;padding:10px 16px;margin-right:10px;cursor:pointer;}
   border-radius:50%;
   overflow:hidden;
 }
+
+/* 内側円を小さくして外周との隙間確保 */
 .ring.d .ringInner,
 .ring.k .ringInner{
   position:absolute;
@@ -52,6 +54,8 @@ button{font-size:16px;padding:10px 16px;margin-right:10px;cursor:pointer;}
   background:#0b0b0b;
   z-index:2;
 }
+
+/* 外周バーコンテナを少し小さくして内円との隙間確保 */
 .ringContent{
   position:absolute;
   width:450px;
@@ -62,14 +66,20 @@ button{font-size:16px;padding:10px 16px;margin-right:10px;cursor:pointer;}
   z-index:1;
   overflow:hidden;
 }
+
+/* D 左半分バー（右側を5px内側） */
 .ring.d .ringContent{
   clip-path: polygon(0 0, calc(50% - 5px) 0, calc(50% - 5px) 100%, 0 100%);
   background:#222;
 }
+
+/* K 右半分バー（左側を5px内側） */
 .ring.k .ringContent{
   clip-path: polygon(calc(50% + 5px) 0, 100% 0, 100% 100%, calc(50% + 5px) 100%);
   background:#222;
 }
+
+/* バー */
 .ringContent .meterBar{
   position:absolute;
   bottom:0;
@@ -78,6 +88,8 @@ button{font-size:16px;padding:10px 16px;margin-right:10px;cursor:pointer;}
   transition:height 0.02s linear, background 0.05s linear;
   background:linear-gradient(to top,#00ff88,#00cc66);
 }
+
+/* D/K 用ピークバー */
 .ringContent .peakBar{
   position:absolute;
   bottom:0;
@@ -87,7 +99,7 @@ button{font-size:16px;padding:10px 16px;margin-right:10px;cursor:pointer;}
   z-index:3;
 }
 
-/* F/J 中央 */
+/* F/J 中央 300px円 */
 .circleContainer{
   position:absolute;
   top:50%;
@@ -146,18 +158,16 @@ button{font-size:16px;padding:10px 16px;margin-right:10px;cursor:pointer;}
   font-family:sans-serif;
   resize:none;
   overflow-y:auto;
-  white-space:pre-wrap;
 }
 </style>
 </head>
 <body>
-<h2>Doncon 感度調整6</h2>
+<h2>Doncon 感度調整5</h2>
 <div id="status">
   <span id="led" class="dot red"></span>
   <span id="statText">DISCONNECTED</span>
 </div>
 <button id="connectBtn">接続</button>
-<button id="saveBtn">SAVE</button>
 <div id="channels" style="display:flex; justify-content:space-around; flex-wrap:wrap;"></div>
 <div class="meterContainer" id="meterContainer"></div>
 
@@ -171,7 +181,6 @@ const led=document.getElementById("led");
 const statText=document.getElementById("statText");
 const channels=document.getElementById("channels");
 const connectBtn=document.getElementById("connectBtn");
-const saveBtn=document.getElementById("saveBtn");
 const meterContainer=document.getElementById("meterContainer");
 
 function setStatus(text,color){
@@ -202,47 +211,93 @@ function createUI(){
   channels.innerHTML="";
   meterContainer.innerHTML="";
 
-  // D/K/F/J リング
-  const dRing=document.createElement("div"); dRing.className="ring d";
-  const dInner=document.createElement("div"); dInner.className="ringInner";
-  const dContent=document.createElement("div"); dContent.className="ringContent";
-  const dBar=document.createElement("div"); dBar.className="meterBar"; dBar.id="bar0"; dContent.appendChild(dBar);
-  const dPeak=document.createElement("div"); dPeak.className="peakBar"; dPeak.id="peak0"; dContent.appendChild(dPeak);
-  dRing.appendChild(dInner); dRing.appendChild(dContent); meterContainer.appendChild(dRing);
+  // Dリング
+  const dRing=document.createElement("div");
+  dRing.className="ring d";
+  const dInner=document.createElement("div");
+  dInner.className="ringInner";
+  const dContent=document.createElement("div");
+  dContent.className="ringContent";
+  const dBar=document.createElement("div");
+  dBar.className="meterBar";
+  dBar.id="bar0";
+  dContent.appendChild(dBar);
+  const dPeak=document.createElement("div");
+  dPeak.className="peakBar";
+  dPeak.id="peak0";
+  dContent.appendChild(dPeak);
+  dRing.appendChild(dInner);
+  dRing.appendChild(dContent);
+  meterContainer.appendChild(dRing);
 
-  const kRing=document.createElement("div"); kRing.className="ring k";
-  const kInner=document.createElement("div"); kInner.className="ringInner";
-  const kContent=document.createElement("div"); kContent.className="ringContent";
-  const kBar=document.createElement("div"); kBar.className="meterBar"; kBar.id="bar3"; kContent.appendChild(kBar);
-  const kPeak=document.createElement("div"); kPeak.className="peakBar"; kPeak.id="peak3"; kContent.appendChild(kPeak);
-  kRing.appendChild(kInner); kRing.appendChild(kContent); meterContainer.appendChild(kRing);
+  // Kリング
+  const kRing=document.createElement("div");
+  kRing.className="ring k";
+  const kInner=document.createElement("div");
+  kInner.className="ringInner";
+  const kContent=document.createElement("div");
+  kContent.className="ringContent";
+  const kBar=document.createElement("div");
+  kBar.className="meterBar";
+  kBar.id="bar3";
+  kContent.appendChild(kBar);
+  const kPeak=document.createElement("div");
+  kPeak.className="peakBar";
+  kPeak.id="peak3";
+  kContent.appendChild(kPeak);
+  kRing.appendChild(kInner);
+  kRing.appendChild(kContent);
+  meterContainer.appendChild(kRing);
 
-  const circleContainer=document.createElement("div"); circleContainer.className="circleContainer";
-  const fWrap=document.createElement("div"); fWrap.className="meterWrap f";
-  const fBar=document.createElement("div"); fBar.className="meterBar"; fBar.id="bar1";
-  const fPeak=document.createElement("div"); fPeak.className="peakBar"; fPeak.id="peak1"; fWrap.appendChild(fBar); fWrap.appendChild(fPeak);
-  const jWrap=document.createElement("div"); jWrap.className="meterWrap j";
-  const jBar=document.createElement("div"); jBar.className="meterBar"; jBar.id="bar2";
-  const jPeak=document.createElement("div"); jPeak.className="peakBar"; jPeak.id="peak2"; jWrap.appendChild(jBar); jWrap.appendChild(jPeak);
-  circleContainer.appendChild(fWrap); circleContainer.appendChild(jWrap); meterContainer.appendChild(circleContainer);
+  // F/J 中央
+  const circleContainer=document.createElement("div");
+  circleContainer.className="circleContainer";
 
-  // メッセージボックス
-  const msgBox=document.createElement("textarea");
-  msgBox.id="messageBox";
-  msgBox.placeholder="任
-    意
-    メッ
-      セージ
-        入力";
-  msgBox.wrap="soft";
+  const fWrap=document.createElement("div");
+  fWrap.className="meterWrap f";
+  const fBar=document.createElement("div");
+  fBar.className="meterBar";
+  fBar.id="bar1";
+  const fPeak=document.createElement("div");
+  fPeak.className="peakBar";
+  fPeak.id="peak1";
+  fWrap.appendChild(fBar);
+  fWrap.appendChild(fPeak);
+
+  const jWrap=document.createElement("div");
+  jWrap.className="meterWrap j";
+  const jBar=document.createElement("div");
+  jBar.className="meterBar";
+  jBar.id="bar2";
+  const jPeak=document.createElement("div");
+  jPeak.className="peakBar";
+  jPeak.id="peak2";
+  jWrap.appendChild(jBar);
+  jWrap.appendChild(jPeak);
+
+  circleContainer.appendChild(fWrap);
+  circleContainer.appendChild(jWrap);
+  meterContainer.appendChild(circleContainer);
+
+  // メッセージボックス追加
+  const msgBox = document.createElement("textarea");
+  msgBox.id = "messageBox";
+  msgBox.placeholder = "任意メッセージ入力";
   meterContainer.appendChild(msgBox);
 
   // スライダー UI
   for(let i=0;i<4;i++){
-    const div=document.createElement("div"); div.className="channelCard";
+    const div=document.createElement("div");
+    div.className="channelCard";
     div.innerHTML=`<h3>${names[i]}</h3>
-      <div class="sliderRow vertical"><label>gain</label><input type="range" min="0.5" max="5" step="0.1" value="1" oninput="sendParam(${i},this.value,'gain')"></div>
-      <div class="sliderRow vertical"><label>threshold</label><input type="range" min="1000" max="40000" step="500" value="15000" oninput="sendParam(${i},this.value,'threshold')"></div>`;
+      <div class="sliderRow vertical">
+        <label>gain</label>
+        <input type="range" min="0.5" max="5" step="0.1" value="1" oninput="sendParam(${i},this.value,'gain')">
+      </div>
+      <div class="sliderRow vertical">
+        <label>threshold</label>
+        <input type="range" min="1000" max="40000" step="500" value="15000" oninput="sendParam(${i},this.value,'threshold')">
+      </div>`;
     channels.appendChild(div);
   }
 }
@@ -250,33 +305,42 @@ function createUI(){
 /* ================= SEND ================= */
 function send(obj){if(writer) writer.write(new TextEncoder().encode(JSON.stringify(obj)+"\n"));}
 function sendParam(ch,val,type){send({cmd:"set", ch:ch, type:type, value:parseFloat(val)});}
-saveBtn.onclick=()=>{setStatus("SAVING","yellow");send({cmd:"save"});};
 
 /* ================= METER ================= */
 function updateMeter(ch,value){
   const percent=Math.min(100,(value/65535)*100);
   const bar=document.getElementById("bar"+ch);
   bar.style.height=percent+"%";
+
   if(percent>70){bar.style.background="white"; flashTimers[ch]=5;}
-  if(flashTimers[ch]>0){flashTimers[ch]--; if(flashTimers[ch]==0){
-    if(ch==0||ch==3) bar.style.background="linear-gradient(to top,#00ff88,#00cc66)";
-    else bar.style.background="linear-gradient(to top,#ff4040,#ff0000)";
-  }}
+  if(flashTimers[ch]>0){
+    flashTimers[ch]--;
+    if(flashTimers[ch]==0){
+      if(ch==0||ch==3) bar.style.background="linear-gradient(to top,#00ff88,#00cc66)";
+      else bar.style.background="linear-gradient(to top,#ff4040,#ff0000)";
+    }
+  }
+
   if(value>peaks[ch]) peaks[ch]=value;
   const peak=document.getElementById("peak"+ch);
-  peak.style.bottom=(peaks[ch]/65535*100)+"%";
+  const peakPercent=(peaks[ch]/65535)*100;
+  peak.style.bottom=peakPercent+"%";
 }
+
+/* peak decay（少し遅めに残す） */
 setInterval(()=>{for(let i=0;i<4;i++) peaks[i]*=0.96;},40);
 
 /* ================= READ ================= */
 async function startRead(){
-  const decoder=new TextDecoder(); let buffer="";
+  const decoder=new TextDecoder();
+  let buffer="";
   while(true){
     const {value,done}=await reader.read();
     if(done){setStatus("DISCONNECTED","red"); break;}
     lastReceive=Date.now();
     buffer+=decoder.decode(value);
-    let lines=buffer.split("\n"); buffer=lines.pop();
+    let lines=buffer.split("\n");
+    buffer=lines.pop();
     for(const line of lines){
       if(!line.startsWith("{")) continue;
       try{
