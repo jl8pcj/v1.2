@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>RP2040 太鼓アーケードUI 完全版</title>
+<title>RP2040 太鼓アーケードUI F/J + D/Kリング 完全版</title>
 <style>
 body{
   background:#0b0b0b;
@@ -52,11 +52,11 @@ button{font-size:16px;padding:10px 16px;margin-right:10px;cursor:pointer;}
   background:#0b0b0b;
 }
 
-/* Kリング内円 */
+/* Kリング内円（中央円＋10pxクリアランス） */
 .ring.k .ringInner{
   position:absolute;
-  width:330px;
-  height:330px;
+  width:310px;
+  height:310px;
   top:50%;
   left:50%;
   transform:translate(-50%,-50%);
@@ -142,7 +142,7 @@ button{font-size:16px;padding:10px 16px;margin-right:10px;cursor:pointer;}
 </head>
 <body>
 
-<h2>RP2040 太鼓アーケードUI 完全版</h2>
+<h2>RP2040 太鼓アーケードUI F/J + D/Kリング 完全版</h2>
 <div id="status">
   <span id="led" class="dot red"></span>
   <span id="statText">DISCONNECTED</span>
