@@ -1,71 +1,44 @@
 <!DOCTYPE html>
-<html lang="ja">
+
+<html>
 <head>
 <meta charset="UTF-8">
-<title>RP2040 スライダー</title>
+<title>RP2040 Control</title>
 </head>
+
 <body>
 
-<h1>RP2040 スライダー制御</h1>
+<h2>RP2040 Settings</h2>
 
-<button id="connectBtn">RP2040 に接続</button>
+<button onclick="connect()">USB接続</button> <button onclick="save()">SAVE</button>
 
-<div>
-  <label>Slider 1: <span id="val1">50</span></label>
-  <input type="range" id="slider1" min="0" max="100" value="50">
-</div>
-<div>
-  <label>Slider 2: <span id="val2">50</span></label>
-  <input type="range" id="slider2" min="0" max="100" value="50">
-</div>
-<div>
-  <label>Slider 3: <span id="val3">50</span></label>
-  <input type="range" id="slider3" min="0" max="100" value="50">
-</div>
-<div>
-  <label>Slider 4: <span id="val4">50</span></label>
-  <input type="range" id="slider4" min="0" max="100" value="50">
-</div>
+<p id="status">未接続</p>
 
 <script>
-let port = null;
 
-// 1. 接続ボタンで RP2040 に接続
-document.getElementById("connectBtn").addEventListener("click", async () => {
-    try {
-        port = await navigator.serial.requestPort();
-        await port.open({ baudRate: 115200 });
-        console.log("RP2040 接続成功");
-    } catch(e) {
-        console.error("接続失敗:", e);
-    }
-});
+let port;
+let writer;
 
-// 2. 送信関数
-function sendToRP(key, value) {
-    if (port && port.writable) {
-        const writer = port.writable.getWriter();
-        const msg = `${key}:${value}\n`;  // 改行必須
-        writer.write(new TextEncoder().encode(msg));
-        writer.releaseLock();
-    }
+async function connect() {
+
+    port = await navigator.serial.requestPort();
+    await port.open({ baudRate: 115200 });
+
+    writer = port.writable.getWriter();
+
+    document.getElementById("status").innerText = "接続OK";
 }
 
-// 3. スライダーイベント
-function setupSlider(sliderId, valId, key) {
-    const slider = document.getElementById(sliderId);
-    const valSpan = document.getElementById(valId);
-    slider.addEventListener("input", () => {
-        valSpan.textContent = slider.value;
-        sendToRP(key, slider.value);
-    });
+async function save() {
+
+    if (!writer) return;
+
+    const data = new TextEncoder().encode("SAVE\n");
+    await writer.write(data);
+
+    document.getElementById("status").innerText = "保存要求送信";
 }
 
-// 4 本のスライダーに対応
-setupSlider("slider1", "val1", "slider_1");
-setupSlider("slider2", "val2", "slider_2");
-setupSlider("slider3", "val3", "slider_3");
-setupSlider("slider4", "val4", "slider_4");
 </script>
 
 </body>
