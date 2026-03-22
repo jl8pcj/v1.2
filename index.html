@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>RP2040 太鼓アーケードUI 外枠半円版</title>
+<title>RP2040 太鼓アーケードUI 正円F/J版</title>
 <style>
 body{
   background:#0b0b0b;
@@ -30,20 +30,32 @@ button{font-size:16px;padding:10px 16px;margin-right:10px;cursor:pointer;}
   gap:10px;
 }
 
-/* 外枠 */
-.meterWrap{
+/* D/K 通常縦長 */
+.meterWrap.d,.meterWrap.k{
   position:relative;
-  width:100px;
+  width:40px;
   height:100%;
   background:#222;
   overflow:hidden;
+  border-radius:4px;
 }
 
-/* 外枠形状 */
-.meterWrap.d{border-radius:4px;}               /* D 矩形 */
-.meterWrap.f{border-radius:50% 0 0 50%;}      /* F 左半円 */
-.meterWrap.j{border-radius:0 50% 50% 0;}      /* J 右半円 */
-.meterWrap.k{border-radius:4px;}               /* K 矩形 */
+/* F/J 半円正円 */
+.circleContainer{
+  position:relative;
+  width:150px;
+  height:150px;
+  display:flex;
+}
+.meterWrap.f,.meterWrap.j{
+  position:relative;
+  width:75px;
+  height:150px;
+  background:#222;
+  overflow:hidden;
+}
+.meterWrap.f{border-radius:75px 0 0 75px;}
+.meterWrap.j{border-radius:0 75px 75px 0;}
 
 /* 中身バー */
 .meterBar{
@@ -64,7 +76,7 @@ button{font-size:16px;padding:10px 16px;margin-right:10px;cursor:pointer;}
 </head>
 <body>
 
-<h2>RP2040 太鼓アーケードUI 外枠半円版</h2>
+<h2>RP2040 太鼓アーケードUI 正円F/J版</h2>
 <div id="status">
   <span id="led" class="dot red"></span>
   <span id="statText">DISCONNECTED</span>
@@ -74,6 +86,7 @@ button{font-size:16px;padding:10px 16px;margin-right:10px;cursor:pointer;}
 <button id="saveBtn">SAVE</button>
 
 <div id="channels" style="display:flex; justify-content:space-around; flex-wrap:wrap;"></div>
+
 <div class="meterContainer" id="meterContainer"></div>
 
 <script>
@@ -114,33 +127,45 @@ connectBtn.onclick=async()=>{
 function createUI(){
   channels.innerHTML="";
   meterContainer.innerHTML="";
-  const classes=["d","f","j","k"];
+
+  // D
+  const dWrap=document.createElement("div");
+  dWrap.className="meterWrap d";
+  const dBar=document.createElement("div"); dBar.className="meterBar"; dBar.id="bar0"; dBar.style.background="linear-gradient(to top,#00ff88,#00cc66)";
+  const dPeak=document.createElement("div"); dPeak.className="peakBar"; dPeak.id="peak0";
+  dWrap.appendChild(dBar); dWrap.appendChild(dPeak);
+  meterContainer.appendChild(dWrap);
+
+  // F/J 正円
+  const circleContainer=document.createElement("div"); circleContainer.className="circleContainer";
+  const fWrap=document.createElement("div"); fWrap.className="meterWrap f";
+  const fBar=document.createElement("div"); fBar.className="meterBar"; fBar.id="bar1"; fBar.style.background="linear-gradient(to top,#ff4040,#ff0000)";
+  const fPeak=document.createElement("div"); fPeak.className="peakBar"; fPeak.id="peak1";
+  fWrap.appendChild(fBar); fWrap.appendChild(fPeak);
+  const jWrap=document.createElement("div"); jWrap.className="meterWrap j";
+  const jBar=document.createElement("div"); jBar.className="meterBar"; jBar.id="bar2"; jBar.style.background="linear-gradient(to top,#ff4040,#ff0000)";
+  const jPeak=document.createElement("div"); jPeak.className="peakBar"; jPeak.id="peak2";
+  jWrap.appendChild(jBar); jWrap.appendChild(jPeak);
+  circleContainer.appendChild(fWrap); circleContainer.appendChild(jWrap);
+  meterContainer.appendChild(circleContainer);
+
+  // K
+  const kWrap=document.createElement("div");
+  kWrap.className="meterWrap k";
+  const kBar=document.createElement("div"); kBar.className="meterBar"; kBar.id="bar3"; kBar.style.background="linear-gradient(to top,#00ff88,#00cc66)";
+  const kPeak=document.createElement("div"); kPeak.className="peakBar"; kPeak.id="peak3";
+  kWrap.appendChild(kBar); kWrap.appendChild(kPeak);
+  meterContainer.appendChild(kWrap);
+
+  // スライダー UI
   for(let i=0;i<4;i++){
-    const div=document.createElement("div");
-    div.className="channelCard";
-    div.innerHTML=`
-      <h3>${names[i]}</h3>
+    const div=document.createElement("div"); div.className="channelCard";
+    div.innerHTML=`<h3>${names[i]}</h3>
       <div class="sliderRow">
         <input type="range" min="0.5" max="5" step="0.1" value="1" oninput="sendParam(${i},this.value,'gain')">
         <input type="range" min="1000" max="40000" step="500" value="15000" oninput="sendParam(${i},this.value,'threshold')">
       </div>`;
     channels.appendChild(div);
-
-    const meterDiv=document.createElement("div");
-    meterDiv.className="meterWrap "+classes[i];
-    const barDiv=document.createElement("div");
-    barDiv.className="meterBar";
-    barDiv.id="bar"+i;
-    if(i==0||i==3) barDiv.style.background="linear-gradient(to top,#00ff88,#00cc66)";
-    else barDiv.style.background="linear-gradient(to top,#ff4040,#ff0000)";
-
-    const peakDiv=document.createElement("div");
-    peakDiv.className="peakBar";
-    peakDiv.id="peak"+i;
-
-    meterDiv.appendChild(barDiv);
-    meterDiv.appendChild(peakDiv);
-    meterContainer.appendChild(meterDiv);
   }
 }
 
