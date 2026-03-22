@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>RP2040 太鼓アーケードUI F/J中央 DK外側リング</title>
+<title>RP2040 太鼓アーケードUI F/J中央 + 縦半分リングDK</title>
 <style>
 body{
   background:#0b0b0b;
@@ -29,14 +29,13 @@ button{font-size:16px;padding:10px 16px;margin-right:10px;cursor:pointer;}
   margin:20px auto;
 }
 
-/* D/K リング */
+/* 外側リング共通 */
 .ring{
   position:absolute;
   width:450px;
   height:450px;
   top:50%;
-  left:50%;
-  transform:translate(-50%,-50%);
+  transform:translateY(-50%);
   border-radius:50%;
   background:#222;
   overflow:hidden;
@@ -49,12 +48,20 @@ button{font-size:16px;padding:10px 16px;margin-right:10px;cursor:pointer;}
   left:50%;
   transform:translate(-50%,-50%);
   border-radius:50%;
-  background:#0b0b0b; /* 中央くり抜き用 */
+  background:#0b0b0b;
 }
 
-/* 左右半分表示 */
+/* D/K 左右半分クリップ */
+.ring.d{
+  left:50%;
+  transform:translate(-165px,-50%); /* F/J 左側に10px空ける */
+}
+.ring.k{
+  left:50%;
+  transform:translate(165px,-50%); /* F/J 右側に10px空ける */
+}
 .ring.d .ringContent{
-  clip-path: polygon(0 0, 50% 0, 50% 100%, 0% 100%);
+  clip-path: polygon(0 0, 50% 0, 50% 100%, 0 100%);
 }
 .ring.k .ringContent{
   clip-path: polygon(50% 0, 100% 0, 100% 100%, 50% 100%);
@@ -69,7 +76,7 @@ button{font-size:16px;padding:10px 16px;margin-right:10px;cursor:pointer;}
   transition:height 0.02s linear, background 0.05s linear;
 }
 
-/* F/J 中央 300px 円 */
+/* F/J 中央 300px円 */
 .circleContainer{
   position:absolute;
   top:50%;
@@ -117,7 +124,7 @@ button{font-size:16px;padding:10px 16px;margin-right:10px;cursor:pointer;}
 </head>
 <body>
 
-<h2>RP2040 太鼓アーケードUI F/J中央 DK外側リング</h2>
+<h2>RP2040 太鼓アーケードUI F/J中央 + 縦半分リングDK</h2>
 <div id="status">
   <span id="led" class="dot red"></span>
   <span id="statText">DISCONNECTED</span>
