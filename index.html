@@ -1,22 +1,72 @@
-<!DOCTYPE html>
-
 <html>
 <head>
 <meta charset="UTF-8">
-<title>RP2040 TEST</title>
+<title>RP2040 Controller</title>
 </head>
 
 <body>
 
-<button onclick="connect()">USB接続</button>
+<h3>RP2040 設定</h3>
+
+<button onclick="connect()">USB接続</button> <button onclick="save()">SAVE</button>
 
 <p id="status">未接続</p>
 
+<hr>
+
+<label>Threshold</label><br> <input type="range" id="threshold" min="0" max="65535" value="30000"> <span id="thresholdValue">30000</span>
+
 <script>
 
+let port;
+let writer;
+
+const threshold = document.getElementById("threshold");
+const thresholdValue = document.getElementById("thresholdValue");
+
+// ===== スライダー表示 =====
+threshold.oninput = () => {
+    thresholdValue.textContent = threshold.value;
+    sendLive();
+};
+
+// ===== USB接続 =====
 async function connect() {
-    document.getElementById("status").textContent =
-        "connect() 呼ばれました";
+
+    port = await navigator.serial.requestPort();
+    await port.open({ baudRate:115200 });
+
+    writer = port.writable.getWriter();
+
+    document.getElementById("status").textContent = "接続OK";
+}
+
+// ===== リアルタイム送信 =====
+async function sendLive() {
+
+    if (!writer) return;
+
+    const obj = {
+        threshold: Number(threshold.value)
+    };
+
+    const txt = "SET " + JSON.stringify(obj) + "\n";
+
+    await writer.write(
+        new TextEncoder().encode(txt)
+    );
+}
+
+// ===== SAVE =====
+async function save() {
+
+    if (!writer) return;
+
+    await writer.write(
+        new TextEncoder().encode("SAVE\n")
+    );
+
+    document.getElementById("status").textContent = "保存要求送信";
 }
 
 </script>
