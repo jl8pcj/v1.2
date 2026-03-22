@@ -1,59 +1,24 @@
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-<meta charset="UTF-8">
-<title>スライダー制御</title>
-</head>
-<body>
-
-<h1>RP2040 スライダー制御</h1>
-
-<!-- USB接続ボタン -->
 <button id="connectBtn">RP2040 に接続</button>
 
-<!-- スライダー -->
-<div>
-  <label>Slider 1: <span id="val1">50</span></label>
-  <input type="range" id="slider1" min="0" max="100" value="50">
-</div>
-
 <script>
-let port = null;
+let port;
 
-// 1. 接続ボタンで USB シリアル接続
 document.getElementById("connectBtn").addEventListener("click", async () => {
     try {
         port = await navigator.serial.requestPort();
         await port.open({ baudRate: 115200 });
         console.log("RP2040 接続成功");
-
-        // 接続時に初期値送信
-        sendToRP("slider_1", document.getElementById("slider1").value);
-
     } catch(e) {
-        console.log("接続失敗:", e);
+        console.error("接続失敗:", e);
     }
 });
 
-// 2. スライダー操作時に送信
-const slider = document.getElementById("slider1");
-const valSpan = document.getElementById("val1");
-
-slider.addEventListener("input", () => {
-    valSpan.textContent = slider.value;
-    sendToRP("slider_1", slider.value);
-});
-
-// 3. RP2040 に送信する関数
 function sendToRP(key, value) {
     if (port && port.writable) {
         const writer = port.writable.getWriter();
-        const msg = `${key}:${value}\n`; // 例: "slider_1:70"
+        const msg = `${key}:${value}\n`;  // ← 改行必須
         writer.write(new TextEncoder().encode(msg));
         writer.releaseLock();
     }
 }
 </script>
-
-</body>
-</html>
