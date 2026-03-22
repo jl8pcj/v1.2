@@ -2,38 +2,64 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>RP2040 Auto Setting</title>
+<title>RP2040 RealTime Setting</title>
 
 <style>
-body { font-family:sans-serif; margin:30px; }
-.slider { width:300px; }
-#status { margin-top:15px; font-weight:bold; }
+body{
+    font-family:sans-serif;
+    margin:30px;
+}
+
+.slider{
+    width:320px;
+}
+
+h2{
+    margin-bottom:20px;
+}
+
+.row{
+    margin-bottom:18px;
+}
+
+button{
+    font-size:18px;
+    padding:8px 18px;
+}
+
+#status{
+    margin-top:20px;
+    font-weight:bold;
+}
 </style>
 </head>
 
 <body>
 
-<h2>RP2040 設定（自動接続）</h2>
+<h2>RP2040 リアルタイム調整</h2>
 
-Threshold
+<div class="row">
+Threshold<br>
 <input id="threshold" class="slider" type="range"
-min="0" max="65535" value="30000"
-oninput="threshold_val.innerText=this.value">
-<span id="threshold_val">30000</span><br><br>
+min="0" max="65535" value="30000">
+<span id="threshold_val">30000</span>
+</div>
 
-Gain
+<div class="row">
+Gain<br>
 <input id="gain" class="slider" type="range"
-min="0" max="5" step="0.1" value="1"
-oninput="gain_val.innerText=this.value">
-<span id="gain_val">1</span><br><br>
+min="0" max="5" step="0.1" value="1">
+<span id="gain_val">1</span>
+</div>
 
-Volume
+<div class="row">
+Volume<br>
 <input id="volume" class="slider" type="range"
-min="0" max="100" value="50"
-oninput="volume_val.innerText=this.value">
-<span id="volume_val">50</span><br><br>
+min="0" max="100" value="50">
+<span id="volume_val">50</span>
+</div>
 
-<button onclick="saveSetting()">SAVE</button>
+<button onclick="saveSetting()">SAVE（永久保存）</button>
 
 <div id="status">待機中...</div>
 
@@ -42,41 +68,46 @@ oninput="volume_val.innerText=this.value">
 let port;
 let reader;
 let writer;
+let updateTimer;
 
-async function autoConnect() {
+// =======================
+// 自動接続
+// =======================
+async function autoConnect(){
 
     const ports = await navigator.serial.getPorts();
 
-    if (ports.length === 0) {
-        document.getElementById("status").innerText =
-            "初回のみ接続許可してください";
+    if(ports.length===0){
+        status.innerText="初回のみ接続許可してください";
         return;
     }
 
-    port = ports[0];
+    port=ports[0];
     await openPort();
 }
 
-async function requestConnect() {
-    port = await navigator.serial.requestPort();
+async function requestConnect(){
+    port=await navigator.serial.requestPort();
     await openPort();
 }
 
-async function openPort() {
+async function openPort(){
 
-    await port.open({ baudRate:115200 });
+    await port.open({baudRate:115200});
 
-    writer = port.writable.getWriter();
-    reader = port.readable.getReader();
+    writer=port.writable.getWriter();
+    reader=port.readable.getReader();
 
-    document.getElementById("status").innerText="接続完了";
+    status.innerText="接続完了";
 
     readLoop();
-
     sendHello();
 }
 
-async function sendHello() {
+// =======================
+// HELLO同期
+// =======================
+async function sendHello(){
     await writer.write(
         new TextEncoder().encode(
             JSON.stringify({cmd:"hello"})+"\n"
@@ -84,18 +115,24 @@ async function sendHello() {
     );
 }
 
-async function readLoop() {
+// =======================
+// 受信ループ
+// =======================
+async function readLoop(){
 
     let buffer="";
 
     while(true){
 
         const {value,done}=await reader.read();
-        if(done) reconnect();
+        if(done){
+            reconnect();
+            return;
+        }
 
         const text=new TextDecoder().decode(value);
 
-        for(let c of text){
+        for(const c of text){
 
             if(c=="\n"){
                 handleMessage(buffer);
@@ -107,6 +144,9 @@ async function readLoop() {
     }
 }
 
+// =======================
+// メッセージ処理
+// =======================
 function handleMessage(msg){
 
     console.log("RX:",msg);
@@ -114,6 +154,7 @@ function handleMessage(msg){
     try{
         const data=JSON.parse(msg);
 
+        // 設定同期
         if(data.threshold!==undefined){
 
             threshold.value=data.threshold;
@@ -128,24 +169,59 @@ function handleMessage(msg){
             status.innerText="設定同期OK";
         }
 
+        // 保存完了
         if(data.status==="ok"){
             status.innerText="✅ 保存完了";
         }
 
-    }catch{}
+    }catch(e){
+        console.log("JSON ERROR",e);
+    }
 }
 
+// =======================
+// ⭐リアルタイム送信
+// =======================
+function realtimeSend(){
+
+    threshold_val.innerText=threshold.value;
+    gain_val.innerText=gain.value;
+    volume_val.innerText=volume.value;
+
+    clearTimeout(updateTimer);
+
+    updateTimer=setTimeout(async ()=>{
+
+        if(!writer) return;
+
+        const packet={
+            cmd:"update",
+            data:{
+                threshold:Number(threshold.value),
+                gain:Number(gain.value),
+                volume:Number(volume.value)
+            }
+        };
+
+        await writer.write(
+            new TextEncoder().encode(
+                JSON.stringify(packet)+"\n"
+            )
+        );
+
+    },30); // 30ms debounce
+}
+
+// =======================
+// 保存
+// =======================
 async function saveSetting(){
 
     status.innerText="保存中...";
 
     const packet={
         cmd:"save",
-        data:{
-            threshold:Number(threshold.value),
-            gain:Number(gain.value),
-            volume:Number(volume.value)
-        }
+        data:{}
     };
 
     await writer.write(
@@ -155,18 +231,28 @@ async function saveSetting(){
     );
 }
 
-async function reconnect(){
+// =======================
+// 再接続
+// =======================
+function reconnect(){
     status.innerText="再接続中...";
     setTimeout(autoConnect,1000);
 }
 
-// USB抜き差し検知
 navigator.serial.addEventListener("connect",autoConnect);
 navigator.serial.addEventListener("disconnect",reconnect);
 
-// ページ読み込み時
+// =======================
+// スライダーイベント登録
+// =======================
+threshold.oninput=realtimeSend;
+gain.oninput=realtimeSend;
+volume.oninput=realtimeSend;
+
+// 起動時自動接続
 autoConnect();
 
 </script>
+
 </body>
 </html>
