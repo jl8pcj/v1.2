@@ -2,110 +2,161 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Piezo Setting</title>
+<title>RP2040 Piezo Setting</title>
+
 <style>
-body{font-family:sans-serif;background:#111;color:#fff}
-.slider{width:300px}
-.box{margin:15px;padding:10px;border:1px solid #555}
+body{
+  font-family:sans-serif;
+  background:#111;
+  color:#fff;
+  padding:20px;
+}
+
+.card{
+  border:1px solid #444;
+  padding:15px;
+  margin:10px 0;
+}
+
+meter{
+  width:100%;
+  height:20px;
+}
+
+.peak{
+  color:#ff4444;
+  font-size:14px;
+}
+
+button{
+  padding:10px;
+  margin:5px;
+  font-size:16px;
+}
 </style>
 </head>
 
 <body>
 
-<h2>RP2040 Piezo 調整</h2>
+<h2>RP2040 リアルタイム調整</h2>
 
 <button onclick="connect()">接続</button>
+<button onclick="save()">SAVE</button>
 
-<div id="ui"></div>
+<div id="channels"></div>
 
 <script>
-
 let port;
 let writer;
 let reader;
 
-let settings={
-  threshold:[20000,20000,20000,20000],
-  gain:[1,1,1,1]
-};
+const names=["D","F","J","K"];
+let sliders=[];
+let peaks=[0,0,0,0];
 
 async function connect(){
 
-  port=await navigator.serial.requestPort();
+  port = await navigator.serial.requestPort();
   await port.open({baudRate:115200});
 
-  writer=port.writable.getWriter();
-  reader=port.readable.getReader();
+  writer = port.writable.getWriter();
+  reader = port.readable.getReader();
 
-  await send("GET\n");
-  readLoop();
+  console.log("connected");
+
+  startRead();
 }
 
-async function send(msg){
-  await writer.write(new TextEncoder().encode(msg));
-}
+function createUI(){
 
-async function readLoop(){
-  while(true){
-    const {value}=await reader.read();
-    if(!value) continue;
-
-    let txt=new TextDecoder().decode(value).trim();
-
-    try{
-      let data=JSON.parse(txt);
-      settings=data;
-      buildUI();
-    }catch{}
-  }
-}
-
-function buildUI(){
-
-  let html="";
+  const root=document.getElementById("channels");
+  root.innerHTML="";
 
   for(let i=0;i<4;i++){
 
-    html+=`
-    <div class="box">
-    Piezo ${i}
+    const div=document.createElement("div");
+    div.className="card";
 
-    <br>Threshold
-    <input class="slider" type="range"
-      min="1000" max="60000"
-      value="${settings.threshold[i]}"
-      oninput="chgT(${i},this.value)">
-    <span id="t${i}">${settings.threshold[i]}</span>
+    div.innerHTML=`
+      <h3>${names[i]}</h3>
 
-    <br>Gain
-    <input class="slider" type="range"
-      min="0.5" max="3" step="0.1"
-      value="${settings.gain[i]}"
-      oninput="chgG(${i},this.value)">
-    <span id="g${i}">${settings.gain[i]}</span>
-    </div>
+      gain
+      <input type="range" min="0.5" max="5" step="0.1" value="1"
+        oninput="sendParam(${i},this.value,'gain')">
+
+      threshold
+      <input type="range" min="1000" max="40000" step="500" value="15000"
+        oninput="sendParam(${i},this.value,'threshold')">
+
+      <meter id="m${i}" min="0" max="65535"></meter>
+      <div class="peak">PEAK: <span id="p${i}">0</span></div>
     `;
+
+    root.appendChild(div);
   }
-
-  document.getElementById("ui").innerHTML=html;
 }
 
-function chgT(i,v){
-  settings.threshold[i]=Number(v);
-  document.getElementById("t"+i).textContent=v;
-  save();
-}
+async function sendParam(ch,val,type){
+  const obj={
+    cmd:"set",
+    ch:ch,
+    type:type,
+    value:parseFloat(val)
+  };
 
-function chgG(i,v){
-  settings.gain[i]=Number(v);
-  document.getElementById("g"+i).textContent=v;
-  save();
+  writer.write(
+    new TextEncoder().encode(JSON.stringify(obj)+"\n")
+  );
 }
 
 async function save(){
-  await send("SET"+JSON.stringify(settings)+"\n");
+  writer.write(
+    new TextEncoder().encode(
+      JSON.stringify({cmd:"save"})+"\n"
+    )
+  );
 }
 
+async function startRead(){
+
+  createUI();
+
+  const decoder=new TextDecoder();
+
+  while(true){
+
+    const {value,done}=await reader.read();
+    if(done) break;
+
+    const text=decoder.decode(value);
+    const lines=text.split("\n");
+
+    for(const line of lines){
+
+      if(!line.startsWith("{")) continue;
+
+      try{
+        const data=JSON.parse(line);
+
+        if(data.type==="adc"){
+
+          const ch=data.ch;
+          const val=data.value;
+
+          document.getElementById("m"+ch).value=val;
+
+          // peak hold
+          if(val>peaks[ch]){
+            peaks[ch]=val;
+            document.getElementById("p"+ch).textContent=val;
+          }
+        }
+
+      }catch(e){}
+    }
+  }
+}
 </script>
+
 </body>
 </html>
