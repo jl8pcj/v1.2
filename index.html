@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>RP2040 太鼓アーケードUI F/J中央 + D/K外側リング グレー背景</title>
+<title>RP2040 太鼓アーケードUI F/J中央 + D/K外側リング 下から上</title>
 <style>
 body{
   background:#0b0b0b;
@@ -38,10 +38,10 @@ button{font-size:16px;padding:10px 16px;margin-right:10px;cursor:pointer;}
   transform:translate(-50%,-50%);
   border-radius:50%;
   overflow:hidden;
-  background:#333; /* ベースグレー */
+  background:#333; /* 下がっている部分はグレー */
 }
 
-/* 内側くりぬき部分 */
+/* 内側くりぬき部分（F/Jより10px隙間） */
 .ringInner{
   position:absolute;
   width:320px;
@@ -63,10 +63,12 @@ button{font-size:16px;padding:10px 16px;margin-right:10px;cursor:pointer;}
 .ring.d .ringContent{
   clip-path: polygon(0 0, 50% 0, 50% 100%, 0 100%);
   left:-10px;
+  background:#333;
 }
 .ring.k .ringContent{
   clip-path: polygon(50% 0, 100% 0, 100% 100%, 50% 100%);
   left:10px;
+  background:#333;
 }
 
 /* 中身バー */
@@ -76,7 +78,7 @@ button{font-size:16px;padding:10px 16px;margin-right:10px;cursor:pointer;}
   width:100%;
   height:0%;
   transition:height 0.02s linear, background 0.05s linear;
-  background:linear-gradient(to top,#00ff88,#00cc66); /* D/K緑系 */
+  background:linear-gradient(to top,#00ff88,#00cc66); /* 緑系 */
 }
 
 /* F/J 中央 300px円 */
@@ -95,7 +97,7 @@ button{font-size:16px;padding:10px 16px;margin-right:10px;cursor:pointer;}
   position:relative;
   height:300px;
   overflow:hidden;
-  background:#333; /* ベースグレー */
+  background:#333; /* 下がっている部分はグレー */
 }
 .meterWrap.f{
   width:145px;
@@ -110,7 +112,8 @@ button{font-size:16px;padding:10px 16px;margin-right:10px;cursor:pointer;}
 
 /* F/J バー */
 .meterWrap.f .meterBar,.meterWrap.j .meterBar{
-  background:linear-gradient(to top,#ff4040,#ff0000); /* 赤系 */
+  bottom:0;
+  background:linear-gradient(to top,#ff4040,#ff0000);
 }
 
 .peakBar{
@@ -124,7 +127,7 @@ button{font-size:16px;padding:10px 16px;margin-right:10px;cursor:pointer;}
 </head>
 <body>
 
-<h2>RP2040 太鼓アーケードUI F/J中央 + D/K外側リング グレー背景</h2>
+<h2>RP2040 太鼓アーケードUI F/J中央 + D/K外側リング 下から上</h2>
 <div id="status">
   <span id="led" class="dot red"></span>
   <span id="statText">DISCONNECTED</span>
