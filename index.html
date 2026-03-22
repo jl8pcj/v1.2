@@ -265,6 +265,19 @@ function createUI(){
   circleContainer.appendChild(jWrap);
   meterContainer.appendChild(circleContainer);
 
+  // ピーク値テキストボックス D F J K
+  for(let i=0;i<4;i++){
+    const input=document.createElement("input");
+    input.type="text";
+    input.id="peakText"+i;
+    input.readOnly=true;
+    input.className="peakText";
+    // 位置設定
+    input.style.left=(500+70*(i%2))+"px"; // メーター右側にずらして配置
+    input.style.top=(50 + 120*(i%2))+"px"; 
+    meterContainer.appendChild(input);
+  }
+  
   // スライダー UI
   for(let i=0;i<4;i++){
     const div=document.createElement("div");
