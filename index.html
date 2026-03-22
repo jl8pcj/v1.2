@@ -65,15 +65,15 @@ button{font-size:16px;padding:10px 16px;margin-right:10px;cursor:pointer;}
   overflow:hidden;
 }
 
-/* D 左半分バー */
+/* D 左半分バー（10px隙間を考慮して右側を少し内側に） */
 .ring.d .ringContent{
-  clip-path: polygon(0 0, 50% 0, 50% 100%, 0 100%);
+  clip-path: polygon(0 0, calc(50% - 5px) 0, calc(50% - 5px) 100%, 0 100%);
   background:#333;
 }
 
-/* K 右半分バー */
+/* K 右半分バー（左側を少し内側に） */
 .ring.k .ringContent{
-  clip-path: polygon(50% 0, 100% 0, 100% 100%, 50% 100%);
+  clip-path: polygon(calc(50% + 5px) 0, 100% 0, 100% 100%, calc(50% + 5px) 100%);
   background:#333;
 }
 
