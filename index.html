@@ -1,104 +1,84 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+<meta charset="UTF-8">
+<title>RP2040 Settings</title>
+
+<style>
+body{
+    font-family:sans-serif;
+    padding:20px;
+    max-width:500px;
+}
+
+h2{
+    margin-bottom:10px;
+}
+
+.sliderBox{
+    margin-top:20px;
+}
+
+.value{
+    font-weight:bold;
+    margin-left:10px;
+}
+
+button{
+    font-size:16px;
+    margin-right:10px;
+    padding:6px 12px;
+}
+</style>
+
+</head>
+
+<body>
+
+<h2>RP2040 設定</h2>
+
+<button onclick="connect()">USB接続</button> <button onclick="save()">SAVE</button>
+
+<p id="status">未接続</p>
+
+<div class="sliderBox">
+<label>Threshold</label><br>
+<input type="range" id="threshold"
+       min="0" max="65535" value="30000">
+<span class="value" id="thresholdValue">30000</span>
+</div>
+
 <script>
 
 let port;
 let writer;
 let reader;
 
-const statusText = document.getElementById("status");
-const threshold = document.getElementById("threshold");
-const thresholdValue = document.getElementById("thresholdValue");
+const statusText =
+    document.getElementById("status");
 
-// ----------------
-// スライダー操作
-// ----------------
+const threshold =
+    document.getElementById("threshold");
+
+const thresholdValue =
+    document.getElementById("thresholdValue");
+
+// ============================
+// スライダー操作（保存しない）
+// ============================
 threshold.oninput = () => {
-    thresholdValue.textContent = threshold.value;
+    thresholdValue.textContent =
+        threshold.value;
+
     sendLive();
 };
 
-// ----------------
+// ============================
 // USB接続
-// ----------------
-async function connect() {
+// ============================
+async function connect(){
 
-    port = await navigator.serial.requestPort();
-    await port.open({ baudRate:115200 });
+    try{
 
-    writer = port.writable.getWriter();
-    reader = port.readable.getReader();
-
-    statusText.textContent = "接続OK";
-
-    readLoop();
-
-    // ★ 接続通知
-    await writer.write(
-        new TextEncoder().encode("HELLO\n")
-    );
-}
-
-// ----------------
-// RP2040受信
-// ----------------
-async function readLoop() {
-
-    const decoder = new TextDecoder();
-
-    while (true) {
-
-        const { value, done } = await reader.read();
-        if (done) break;
-
-        const text = decoder.decode(value).trim();
-
-        console.log("RP2040:", text);
-
-        if (text.startsWith("SETTINGS ")) {
-
-            const data =
-                JSON.parse(text.substring(9));
-
-            // スライダー同期
-            threshold.value = data.threshold;
-            thresholdValue.textContent = data.threshold;
-
-            statusText.textContent = "設定同期OK";
-        }
-
-        if (text === "SAVED") {
-            statusText.textContent = "✅ 保存完了";
-        }
-    }
-}
-
-// ----------------
-// リアルタイム送信
-// ----------------
-async function sendLive() {
-
-    if (!writer) return;
-
-    const obj = {
-        threshold: Number(threshold.value)
-    };
-
-    const txt = "SET " + JSON.stringify(obj) + "\n";
-
-    await writer.write(
-        new TextEncoder().encode(txt)
-    );
-}
-
-// ----------------
-// SAVE
-// ----------------
-async function save() {
-
-    statusText.textContent = "保存中...";
-
-    await writer.write(
-        new TextEncoder().encode("SAVE\n")
-    );
-}
-
-</script>
+        port = await navigator.serial.requestPort();
