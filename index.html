@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>RP2040 太鼓アーケードUI FJ中央 DK外側</title>
+<title>RP2040 太鼓アーケードUI F/J中央 DK外側リング</title>
 <style>
 body{
   background:#0b0b0b;
@@ -29,25 +29,44 @@ button{font-size:16px;padding:10px 16px;margin-right:10px;cursor:pointer;}
   margin:20px auto;
 }
 
-/* D/K 外側（400pxの「( )」型） */
-.meterWrap.dk{
+/* D/K リング */
+.ring{
   position:absolute;
-  width:400px;
-  height:400px;
+  width:450px;
+  height:450px;
   top:50%;
-  transform:translateY(-50%);
-  overflow:hidden;
+  left:50%;
+  transform:translate(-50%,-50%);
+  border-radius:50%;
   background:#222;
+  overflow:hidden;
 }
-.meterWrap.d{
+.ringInner{
+  position:absolute;
+  width:310px;
+  height:310px;
+  top:50%;
   left:50%;
-  transform:translate(-150px,-50%);
-  border-radius:200px 0 0 200px;
+  transform:translate(-50%,-50%);
+  border-radius:50%;
+  background:#0b0b0b; /* 中央くり抜き用 */
 }
-.meterWrap.k{
-  left:50%;
-  transform:translate(150px,-50%);
-  border-radius:0 200px 200px 0;
+
+/* 左右半分表示 */
+.ring.d .ringContent{
+  clip-path: polygon(0 0, 50% 0, 50% 100%, 0% 100%);
+}
+.ring.k .ringContent{
+  clip-path: polygon(50% 0, 100% 0, 100% 100%, 50% 100%);
+}
+
+/* 中身バー */
+.ringContent .meterBar{
+  position:absolute;
+  bottom:0;
+  width:100%;
+  height:0%;
+  transition:height 0.02s linear, background 0.05s linear;
 }
 
 /* F/J 中央 300px 円 */
@@ -98,7 +117,7 @@ button{font-size:16px;padding:10px 16px;margin-right:10px;cursor:pointer;}
 </head>
 <body>
 
-<h2>RP2040 太鼓アーケードUI F/J中央 DK外側</h2>
+<h2>RP2040 太鼓アーケードUI F/J中央 DK外側リング</h2>
 <div id="status">
   <span id="led" class="dot red"></span>
   <span id="statText">DISCONNECTED</span>
@@ -151,24 +170,29 @@ function createUI(){
   meterContainer.innerHTML="";
 
   // D
-  const dWrap=document.createElement("div");
-  dWrap.className="meterWrap dk d";
+  const dRing=document.createElement("div");
+  dRing.className="ring d";
+  const dInner=document.createElement("div"); dInner.className="ringInner";
+  const dContent=document.createElement("div"); dContent.className="ringContent";
   const dBar=document.createElement("div"); dBar.className="meterBar"; dBar.id="bar0"; dBar.style.background="linear-gradient(to top,#00ff88,#00cc66)";
-  const dPeak=document.createElement("div"); dPeak.className="peakBar"; dPeak.id="peak0";
-  dWrap.appendChild(dBar); dWrap.appendChild(dPeak);
-  meterContainer.appendChild(dWrap);
+  dContent.appendChild(dBar);
+  dRing.appendChild(dInner);
+  dRing.appendChild(dContent);
+  meterContainer.appendChild(dRing);
 
   // K
-  const kWrap=document.createElement("div");
-  kWrap.className="meterWrap dk k";
+  const kRing=document.createElement("div");
+  kRing.className="ring k";
+  const kInner=document.createElement("div"); kInner.className="ringInner";
+  const kContent=document.createElement("div"); kContent.className="ringContent";
   const kBar=document.createElement("div"); kBar.className="meterBar"; kBar.id="bar3"; kBar.style.background="linear-gradient(to top,#00ff88,#00cc66)";
-  const kPeak=document.createElement("div"); kPeak.className="peakBar"; kPeak.id="peak3";
-  kWrap.appendChild(kBar); kWrap.appendChild(kPeak);
-  meterContainer.appendChild(kWrap);
+  kContent.appendChild(kBar);
+  kRing.appendChild(kInner);
+  kRing.appendChild(kContent);
+  meterContainer.appendChild(kRing);
 
-  // F/J 中央 300px
+  // F/J 中央
   const circleContainer=document.createElement("div"); circleContainer.className="circleContainer";
-
   const fWrap=document.createElement("div"); fWrap.className="meterWrap f";
   const fBar=document.createElement("div"); fBar.className="meterBar"; fBar.id="bar1"; fBar.style.background="linear-gradient(to top,#ff4040,#ff0000)";
   const fPeak=document.createElement("div"); fPeak.className="peakBar"; fPeak.id="peak1";
@@ -205,17 +229,14 @@ saveBtn.onclick=()=>{setStatus("SAVING","yellow");send({cmd:"save"});};
 function updateMeter(ch,value){
   const percent=Math.min(100,(value/65535)*100);
   const bar=document.getElementById("bar"+ch);
-  const peak=document.getElementById("peak"+ch);
-
   bar.style.height=percent+"%";
-
   if(percent>70){bar.style.background="white"; flashTimers[ch]=5;}
   if(flashTimers[ch]>0){flashTimers[ch]--; if(flashTimers[ch]==0){
     if(ch==0||ch==3) bar.style.background="linear-gradient(to top,#00ff88,#00cc66)";
     else bar.style.background="linear-gradient(to top,#ff4040,#ff0000)";
   }}
-
   if(value>peaks[ch]) peaks[ch]=value;
+  const peak=document.getElementById("peak"+ch);
   const peakPercent=(peaks[ch]/65535)*100;
   peak.style.bottom=peakPercent+"%";
 }
