@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>RP2040 太鼓アーケードUI F/J中央 + D/K外側リング 下から上</title>
+<title>RP2040 太鼓アーケードUI F/J + D/Kリング 分割10px</title>
 <style>
 body{
   background:#0b0b0b;
@@ -38,10 +38,8 @@ button{font-size:16px;padding:10px 16px;margin-right:10px;cursor:pointer;}
   transform:translate(-50%,-50%);
   border-radius:50%;
   overflow:hidden;
-  background:#333; /* 下がっている部分はグレー */
 }
 
-/* 内側くりぬき部分（F/Jより10px隙間） */
 .ringInner{
   position:absolute;
   width:320px;
@@ -59,19 +57,18 @@ button{font-size:16px;padding:10px 16px;margin-right:10px;cursor:pointer;}
   height:100%;
 }
 
-/* 左右半分クリップ */
+/* 左右半分に分割 + 10pxクリアランス */
 .ring.d .ringContent{
   clip-path: polygon(0 0, 50% 0, 50% 100%, 0 100%);
-  left:-10px;
-  background:#333;
+  left:-5px; /* 10px分クリアランス半分ずつ */
+  background:#333; /* 下がっている部分はグレー */
 }
 .ring.k .ringContent{
   clip-path: polygon(50% 0, 100% 0, 100% 100%, 50% 100%);
-  left:10px;
-  background:#333;
+  left:5px;
+  background:#333; /* 下がっている部分はグレー */
 }
 
-/* 中身バー */
 .ringContent .meterBar{
   position:absolute;
   bottom:0;
@@ -112,8 +109,11 @@ button{font-size:16px;padding:10px 16px;margin-right:10px;cursor:pointer;}
 
 /* F/J バー */
 .meterWrap.f .meterBar,.meterWrap.j .meterBar{
+  position:absolute;
   bottom:0;
-  background:linear-gradient(to top,#ff4040,#ff0000);
+  width:100%;
+  height:0%;
+  background:linear-gradient(to top,#ff4040,#ff0000); /* 赤系 */
 }
 
 .peakBar{
@@ -127,7 +127,7 @@ button{font-size:16px;padding:10px 16px;margin-right:10px;cursor:pointer;}
 </head>
 <body>
 
-<h2>RP2040 太鼓アーケードUI F/J中央 + D/K外側リング 下から上</h2>
+<h2>RP2040 太鼓アーケードUI F/J + D/Kリング 分割10px</h2>
 <div id="status">
   <span id="led" class="dot red"></span>
   <span id="statText">DISCONNECTED</span>
@@ -233,11 +233,11 @@ function send(obj){if(writer) writer.write(new TextEncoder().encode(JSON.stringi
 function sendParam(ch,val,type){send({cmd:"set", ch:ch, type:type, value:parseFloat(val)});}
 saveBtn.onclick=()=>{setStatus("SAVING","yellow");send({cmd:"save"});};
 
-/* ================= METER & FLASH ================= */
+/* ================= METER ================= */
 function updateMeter(ch,value){
   const percent=Math.min(100,(value/65535)*100);
   const bar=document.getElementById("bar"+ch);
-  bar.style.height=percent+"%";
+  bar.style.height=percent+"%"; // 下から上
   if(percent>70){bar.style.background="white"; flashTimers[ch]=5;}
   if(flashTimers[ch]>0){flashTimers[ch]--; if(flashTimers[ch]==0){
     if(ch==0||ch==3) bar.style.background="linear-gradient(to top,#00ff88,#00cc66)";
