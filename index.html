@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>RP2040 太鼓アーケードUI F/J + D/Kリング 分割10px</title>
+<title>RP2040 太鼓アーケードUI F/J + D/Kリング K内径調整10px</title>
 <style>
 body{
   background:#0b0b0b;
@@ -42,12 +42,19 @@ button{font-size:16px;padding:10px 16px;margin-right:10px;cursor:pointer;}
 
 .ringInner{
   position:absolute;
-  width:320px;
+  width:320px; /* Dリングはそのまま */
   height:320px;
   top:50%;
   left:50%;
   transform:translate(-50%,-50%);
   border-radius:50%;
+  background:#0b0b0b;
+}
+
+/* Kリングだけ内径拡大して中央と10pxクリアランス */
+.ring.k .ringInner{
+  width:330px;
+  height:330px;
   background:#0b0b0b;
 }
 
@@ -65,7 +72,7 @@ button{font-size:16px;padding:10px 16px;margin-right:10px;cursor:pointer;}
 }
 .ring.k .ringContent{
   clip-path: polygon(50% 0, 100% 0, 100% 100%, 50% 100%);
-  left:15px;
+  left:0; /* 内径拡大で自動的に中央と10px隙間 */
   background:#333; /* 下がっている部分はグレー */
 }
 
@@ -127,7 +134,7 @@ button{font-size:16px;padding:10px 16px;margin-right:10px;cursor:pointer;}
 </head>
 <body>
 
-<h2>RP2040 太鼓アーケードUI F/J + D/Kリング 分割10px</h2>
+<h2>RP2040 太鼓アーケードUI F/J + D/Kリング K内径調整10px</h2>
 <div id="status">
   <span id="led" class="dot red"></span>
   <span id="statText">DISCONNECTED</span>
@@ -231,7 +238,7 @@ function createUI(){
 function send(obj){if(writer) writer.write(new TextEncoder().encode(JSON.stringify(obj)+"\n"));}
 
 function sendParam(ch,val,type){send({cmd:"set", ch:ch, type:type, value:parseFloat(val)});}
-saveBtn.onclick=()=>{setStatus("SAVING","yellow");send({cmd:"save"});};
+saveBtn.onclick=()=>{setStatus("SAVING","yellow");send({cmd:"save"});} ;
 
 /* ================= METER ================= */
 function updateMeter(ch,value){
