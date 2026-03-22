@@ -156,7 +156,7 @@ button{font-size:16px;padding:10px 16px;margin-right:10px;cursor:pointer;}
 </style>
 </head>
 <body>
-<h2>Doncon 感度調整</h2>
+<h2>Doncon 感度調整3</h2>
 <div id="status">
   <span id="led" class="dot red"></span>
   <span id="statText">DISCONNECTED</span>
@@ -283,12 +283,12 @@ function createUI(){
   const msgBox=document.createElement("input");
   msgBox.type="text";
   msgBox.id="messageBox";
-  msgBox.placeholder="1️⃣ gain（ゲイン）
+  msgBox.placeholder=" gain（ゲイン）
 ピエゾセンサーや入力信号の 感度の倍率 です。
 右にスライドすると → 信号が大きく扱われるようになります → バーが より高く反応 します。
 逆に左にスライドすると → 信号が弱く扱われ → バーが低めにしか上がりません。
 
-2️⃣ threshold（しきい値）
+ threshold（しきい値）
 信号を どのレベルからバーに反映するかの基準値 です。
 右にスライドすると → しきい値が高くなる → 強く叩かないとバーが上がらない
 左にスライドすると → しきい値が低くなる → 弱く叩いただけでもバーが上がる
