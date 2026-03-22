@@ -1,23 +1,186 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>RP2040 Setting</title>
+
+<style>
+body {
+    font-family: sans-serif;
+    margin: 30px;
+}
+
+.slider {
+    width: 300px;
+}
+
+button {
+    font-size: 18px;
+    padding: 8px 16px;
+    margin-top: 10px;
+}
+
+#status {
+    margin-top: 15px;
+    font-weight: bold;
+}
+</style>
+</head>
+
+<body>
+
+<h2>RP2040 設定</h2>
+
+<button onclick="connect()">接続</button>
+
+<hr>
+
+<div>
+Threshold:
+<input id="threshold" class="slider" type="range"
+       min="0" max="65535" value="30000"
+       oninput="threshold_val.innerText=this.value">
+<span id="threshold_val">30000</span>
+</div>
+
+<br>
+
+<div>
+Gain:
+<input id="gain" class="slider" type="range"
+       min="0" max="5" step="0.1" value="1"
+       oninput="gain_val.innerText=this.value">
+<span id="gain_val">1</span>
+</div>
+
+<br>
+
+<div>
+Volume:
+<input id="volume" class="slider" type="range"
+       min="0" max="100" value="50"
+       oninput="volume_val.innerText=this.value">
+<span id="volume_val">50</span>
+</div>
+
+<br>
+
+<button onclick="saveSetting()">SAVE</button>
+
+<div id="status">未接続</div>
+
 <script>
+
+let port;
+let reader;
 let writer;
 
+// =======================
+// 接続
+// =======================
+async function connect() {
+
+    port = await navigator.serial.requestPort();
+    await port.open({ baudRate: 115200 });
+
+    writer = port.writable.getWriter();
+    reader = port.readable.getReader();
+
+    document.getElementById("status").innerText = "接続完了";
+
+    readLoop();
+}
+
+// =======================
+// RP2040から受信
+// =======================
+async function readLoop() {
+
+    let buffer = "";
+
+    while (true) {
+
+        const { value, done } = await reader.read();
+        if (done) break;
+
+        const text = new TextDecoder().decode(value);
+
+        for (let c of text) {
+
+            if (c === "\n") {
+                handleMessage(buffer);
+                buffer = "";
+            } else {
+                buffer += c;
+            }
+        }
+    }
+}
+
+// =======================
+// メッセージ処理
+// =======================
+function handleMessage(msg) {
+
+    console.log("RX:", msg);
+
+    try {
+        const data = JSON.parse(msg);
+
+        // 接続時設定受信
+        if (data.threshold !== undefined) {
+
+            threshold.value = data.threshold;
+            threshold_val.innerText = data.threshold;
+
+            gain.value = data.gain;
+            gain_val.innerText = data.gain;
+
+            volume.value = data.volume;
+            volume_val.innerText = data.volume;
+
+            document.getElementById("status").innerText =
+                "設定読み込み完了";
+        }
+
+        // 保存完了通知
+        if (data.status === "ok") {
+            document.getElementById("status").innerText =
+                "✅ 保存完了";
+        }
+
+    } catch(e) {
+        console.log("JSON error", e);
+    }
+}
+
+// =======================
+// 保存
+// =======================
 async function saveSetting() {
 
-  const setting = {
-    threshold: Number(document.getElementById("threshold").value),
-    gain: Number(document.getElementById("gain").value),
-    volume: Number(document.getElementById("volume").value)
-  };
+    const setting = {
+        threshold: Number(threshold.value),
+        gain: Number(gain.value),
+        volume: Number(volume.value)
+    };
 
-  const packet = {
-    cmd: "save",
-    data: setting
-  };
+    const packet = {
+        cmd: "save",
+        data: setting
+    };
 
-  const text = JSON.stringify(packet) + "\n";
+    const text = JSON.stringify(packet) + "\n";
 
-  document.getElementById("status").innerText = "保存中...";
+    document.getElementById("status").innerText =
+        "保存中...";
 
-  await writer.write(new TextEncoder().encode(text));
+    await writer.write(
+        new TextEncoder().encode(text)
+    );
 }
+
 </script>
+
+</body>
+</html>
