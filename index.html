@@ -155,7 +155,7 @@ button{font-size:16px;padding:10px 16px;margin-right:10px;cursor:pointer;}
 <script>
 let port, reader, writer;
 let lastReceive=0;
-const names=["D","F","J","K"];
+const names=["左カッ","左ドン","右ドン","右カッ"];
 let peaks=[0,0,0,0];
 let flashTimers=[0,0,0,0];
 const led=document.getElementById("led");
@@ -270,8 +270,12 @@ function createUI(){
     const div=document.createElement("div");
     div.className="channelCard";
     div.innerHTML=`<h3>${names[i]}</h3>
-      <div class="sliderRow">
+      <div class="sliderRow vertical">
+        <label>gain</label>
         <input type="range" min="0.5" max="5" step="0.1" value="1" oninput="sendParam(${i},this.value,'gain')">
+      </div>
+      <div class="sliderRow vertical">
+        <label>threshold</label>
         <input type="range" min="1000" max="40000" step="500" value="15000" oninput="sendParam(${i},this.value,'threshold')">
       </div>`;
     channels.appendChild(div);
